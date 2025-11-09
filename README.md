@@ -8,7 +8,7 @@ This repository presents the **reinforcement learning framework I designed and i
 
 This implementation corresponds to the reinforcement learning module described in our paper:  
 *Enhancing Cryptocurrency Trading Strategies: A Deep Reinforcement Learning Approach Integrating Multi-Source LLM Sentiment Analysis (IEEE CIFEr 2025).*  
-[[PDF]](./publications/Enhancing_Cryptocurrency_Trading_Strategies_A_Deep_Reinforcement_Learning_Approach_Integrating_Multi-Source_LLM_Sentiment_Analysis.pdf)
+[[PDF]](../../publications/Enhancing_Cryptocurrency_Trading_Strategies_A_Deep_Reinforcement_Learning_Approach_Integrating_Multi-Source_LLM_Sentiment_Analysis.pdf)
 
 ![System Framework](images/FrameWork.png)
 
@@ -25,7 +25,7 @@ This implementation corresponds to the reinforcement learning module described i
 
 ---
 
-## Algorithm Outline (Pseudo-code)
+## Core Workflow (Pseudo code)
 
 The following pseudo-code summarizes the core **PPO-LSTM training logic** used in this project.  
 It highlights how the agent interacts with the trading environment, computes advantages using **Generalized Advantage Estimation (GAE)**,  
@@ -134,6 +134,15 @@ Below are representative results from the training and backtesting processes:
     ![profit_Best_test-OHLCV](images/profit_Best_test-OHLCV.png)
 - Multi-Cryptocurrency Backtesting
     ![Test_value](images/Test_value.png)
+
+---
+
+## Future Work
+
+1. **Model Optimization** – configurable XGBoost and Ridge hyperparameters; PPO meta-parameter tuning.  
+2. **Feature Engineering** – integrate industry/style factors and liquidity signals.  
+3. **Risk Management** – add leverage and exposure limits, turnover caps, and realistic cost modeling.  
+4. **System Reliability** – improve logging and data validation for better interpretability.
 
 ---
 
