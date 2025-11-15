@@ -41,7 +41,7 @@ if __name__ == "__main__":
     max_round = 55001
     # max_round = 10
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    file_path = 'market_data_with_sentiments.csv'
+    file_path = 'equity_index_hourly.csv'
     df = pd.read_csv(file_path)
     df = df.reset_index(drop=True)
     df["Real_close"] = df["close"]
@@ -52,35 +52,16 @@ if __name__ == "__main__":
     # df_test = df.iloc[2000:2500]
 
     scaler = StandardScaler()
-    # columns_to_normalize = ['open', 'high', 'low', 'close', 'volume', "Regulatory Impact_news",
-    #                         "Technological Impact_news",
-    #                         "Market Adoption Impact_news", "Macroeconomic Implications_news", "Overall Sentiment_news",
-    #                         "Virality potential_x", "Informative value_x", "Sentiment polarity_x", "Impact duration_x",
-    #                         "Regulatory Impact_x",
-    #                         "Technological Impact_x", "Market Adoption Impact_x", "Macroeconomic Implications_x",
-    #                         "Overall Sentiment_x"]
-    #
+
     columns_to_normalize = ['open', 'high', 'low', 'close', 'volume','EMA12','EMA26',
                             'DIFF',	'DEA',	'MACD',	'kdj_k','kdj_d','kdj_j',
                             'CCI','RSI1','RSI2','RSI3','MA5','MA10','SMA10', 'SMA50', 'DIF','DIFMA',
-                            'PDI', 'MDI', 'ADX', 'ADXR', 'VOL', 'VOL5','VOL135', "Regulatory Impact_news",
-                            "Technological Impact_news",
-                            "Market Adoption Impact_news", "Macroeconomic Implications_news", "Overall Sentiment_news",
-                            "Virality potential_x", "Informative value_x", "Sentiment polarity_x", "Impact duration_x",
-                            "Regulatory Impact_x",
-                            "Technological Impact_x", "Market Adoption Impact_x", "Macroeconomic Implications_x",
-                            "Overall Sentiment_x"]
-
-    # columns_to_normalize = ['open', 'high', 'low', 'close', 'volume','EMA12','EMA26',
-    #                         'DIFF',	'DEA',	'MACD',	'kdj_k','kdj_d','kdj_j',
-    #                         'CCI','RSI1','RSI2','RSI3','MA5','MA10', 'DIF','DIFMA',
-    #                         'PDI', 'MDI', 'ADX', 'ADXR', 'VOL', 'VOL5','VOL135', "Regulatory Impact_news",
-    #                         "Technological Impact_news",
-    #                         "Market Adoption Impact_news", "Macroeconomic Implications_news", "Overall Sentiment_news",
-    #                         "Virality potential_x", "Informative value_x", "Sentiment polarity_x", "Impact duration_x",
-    #                         "Regulatory Impact_x",
-    #                         "Technological Impact_x", "Market Adoption Impact_x", "Macroeconomic Implications_x",
-    #                         "Overall Sentiment_x"]
+                            'PDI', 'MDI', 'ADX', 'ADXR', 'VOL', 'VOL5','VOL135', 
+                            "news_regulatory_score", "news_tech_score", "news_adoption_score", "news_macro_score",
+                            "news_sentiment_score", "headline_sentiment_strength", "headline_information_value",
+                            "headline_sentiment_polarity", "headline_event_horizon", "news_regulatory_score_alt",
+                            "news_tech_score_alt", "news_adoption_score_alt", "news_macro_score_alt",
+                            "news_sentiment_score_alt" ]
 
     df_train[columns_to_normalize] = scaler.fit_transform(df_train[columns_to_normalize])
     df_test[columns_to_normalize] = scaler.transform(df_test[columns_to_normalize])
