@@ -41,7 +41,7 @@ if __name__ == "__main__":
     max_round = 55001
     # max_round = 10
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    file_path = 'BTC_20241031_with_sentiments_2.csv'
+    file_path = 'market_data_with_sentiments.csv'
     df = pd.read_csv(file_path)
     df = df.reset_index(drop=True)
     df["Real_close"] = df["close"]
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     env_train = stock(df_train)
 
     env_test = stock(df_test)
-    # pickle_file = open("trained_model/BTC_ALL.pkl", "rb")
+    # pickle_file = open("trained_model/market_model.pkl", "rb")
     # model = pickle.load(pickle_file).to(device)
     # env_test, test_rewards = BackTest(env_test, model, show_log=False)
     # env_test.draw('trained_Trade/trade_Best_test-ALL.png', 'trained_Trade/profit_Best_test-ALL.png')
