@@ -1,42 +1,67 @@
+# Real-Time Trading Strategy System
+
 ## Project Overview
-This repository presents the **reinforcement learning framework I designed and implemented** for a real-time market-simulation trading system.
 
-While an upstream research team provided **optional external sentiment features**, **all reinforcement-learning, modelling, and system-level components were implemented by me**.
+This repository presents the **reinforcement learning trading framework I designed and implemented** for cryptocurrency markets, using real-world historical market data and transaction-cost-aware evaluation.
 
-My work focuses entirely on the **downstream quantitative trading module**, including:
+The system was developed as part of our IEEE CIFEr 2025 research on cryptocurrency trading with multi-source sentiment signals. The full study evaluates the strategy on hourly BTC, ETH, and DOGE market data and also includes a short live Bitcoin trading experiment.
 
-- A PPO-based trading agent with an LSTM policy network for sequence-aware decision-making
-- A sliding-window state representation constructed from price, volume, and technical indicators (EMA, MACD, RSI, KDJ, etc.)
-- Optional external sentiment features (provided by the LLM team; not implemented here)
-- Optional integration of external sentiment features (consumed as inputs; not implemented in this repository)
-- A risk-sensitive reward function combining realised returns with volatility penalisation
-- A full training pipeline: on-policy data collection, experience buffer, PPO updates, and convergence monitoring
-- A custom execution-aware backtesting engine supporting transaction costs, position tracking, and PnL evaluation
-- Visualisation tools for analysing agent behaviour, trading actions, and out-of-sample performance
+While an upstream research team developed the multi-LLM sentiment-analysis pipeline, **all reinforcement-learning, trading-environment, training, and backtesting components in this repository were implemented by me**.
 
-This repository **does not include the sentiment-feature generation module**, which was developed independently and imported as external data. The code here focuses exclusively on reinforcement learning, environment design, and trading-strategy evaluation.
+My work focuses on the downstream quantitative trading module, including:
 
-This implementation corresponds to the reinforcement learning module described in our paper:  
-*Enhancing Cryptocurrency Trading Strategies: A Deep Reinforcement Learning Approach Integrating Multi-Source LLM Sentiment Analysis (IEEE CIFEr 2025).*  
-[[PDF]](../../publications/Enhancing_Cryptocurrency_Trading_Strategies_A_Deep_Reinforcement_Learning_Approach_Integrating_Multi-Source_LLM_Sentiment_Analysis.pdf)
+- A PPO-based trading agent with an LSTM-enhanced actor–critic network
+- A 24-step rolling market-state representation combining OHLCV data, technical indicators, and externally generated sentiment features
+- Buy / Sell / Hold decision-making with position-aware execution logic
+- Transaction-cost-aware trading and portfolio-value tracking
+- A full on-policy PPO training pipeline with Generalized Advantage Estimation and clipped policy updates
+- Out-of-sample backtesting on real cryptocurrency market data
+- Visualisation tools for analysing agent behaviour, trading decisions, and strategy performance
+
+The sentiment-feature generation module is not included in this repository. Sentiment signals are treated as external inputs supplied by the upstream research pipeline.
+
+This repository contains the PPO-based trading implementation associated with our IEEE CIFEr 2025 study, including additional implementation details in state construction, technical-feature engineering, and LSTM-based policy modelling:
+
+[*Enhancing Cryptocurrency Trading Strategies: A Deep Reinforcement Learning Approach Integrating Multi-Source LLM Sentiment Analysis*](https://ieeexplore.ieee.org/document/10975733)  
+**IEEE CIFEr 2025**
 
 ![System Framework](images/FrameWork.png)
 
 ---
 
-## Features
+## Results
 
-- PPO with LSTM-based policy networks for sequence-aware decision-making using price-, volume-, and indicator-derived features
-- Sliding-window technical feature extraction, including EMA, MACD, RSI, KDJ, CCI, ADX, and volatility measures
-- Custom execution-aware trading environment with position tracking, transaction costs, and PnL evaluation
-- Risk-sensitive reward function combining realised returns with volatility penalisation to encourage stable behaviour
-- Comprehensive visualisation tools for analysing agent actions, rewards, PnL curves, and training convergence
-- Efficient PyTorch implementation, supporting both CPU and GPU training
-- Robust backtesting module for out-of-sample evaluation under multiple market scenarios
+In the full study, the end-to-end strategy combining this trading module with externally generated sentiment features was evaluated on hourly real-market data for **Bitcoin (BTC), Ethereum (ETH), and Dogecoin (DOGE)**, with a **0.1% transaction fee** applied to executed trades.
+
+| Asset | Annualized Return | Sharpe Ratio |
+|:------|------------------:|-------------:|
+| BTC | **72.34%** | **2.53** |
+| ETH | **19.91%** | **2.10** |
+| DOGE | **27.22%** | **2.69** |
+
+The proposed strategy achieved the **highest Sharpe ratio across all three cryptocurrency instances** among the evaluated methods. It also achieved the highest annualized return on BTC and ETH.
+
+For DOGE, the CCI benchmark produced a higher annualized return (36.08% vs. 27.22%), while the proposed strategy achieved a substantially higher Sharpe ratio (2.69 vs. 1.14), indicating stronger risk-adjusted performance.
+
+In addition to historical out-of-sample evaluation, the complete research system was deployed in a **half-month live Bitcoin trading experiment**, achieving an approximately **3% return**.
 
 ---
 
-## Core Workflow (Pseudo code)
+## Features
+
+- PPO-based actor–critic trading agent with sequential state modelling
+- Real-world cryptocurrency market data with hourly observations
+- Buy / Sell / Hold action space with position-aware execution constraints
+- Transaction-cost-aware trading environment and portfolio accounting
+- Integration interface for externally generated sentiment signals
+- On-policy PPO training with Generalized Advantage Estimation (GAE)
+- Out-of-sample evaluation across BTC, ETH, and DOGE
+- PyTorch implementation supporting CPU and GPU training
+- Visualisation of rewards, trading actions, portfolio value, and test performance
+
+---
+
+## Core Workflow (Pseudocode)
 
 The following pseudo-code summarizes the core **PPO-LSTM training pipeline** implemented in this project.
 It highlights how the agent interacts with the execution-aware trading environment, collects on-policy trajectories, computes advantages using **Generalized Advantage Estimation (GAE)**, and performs clipped PPO optimisation.
@@ -55,6 +80,10 @@ for episode in range(max_episodes):
         prob, h_next = agent.policy(s, h)
         a = sample_action(prob)
         s_next, r, done = env.step(a)
+
+        # Reward is based on next-period price movement,
+        # adjusted according to action and current position state.
+        # Transaction costs are handled by the execution logic.
 
         # 2. Store experience (on-policy)
         agent.put_data((s, a, r, s_next, prob[a]))
@@ -76,14 +105,10 @@ for episode in range(max_episodes):
 
         optimize(policy_loss + value_loss_)
 ```  
-**Risk-adjusted reward design:**  
-`R_t = ROI_t − λ × VolatilityPenalty_t`
-
-The reward penalises volatility and unnecessary trading activity, encouraging the agent to learn **stable, risk-aware behaviour** rather than chasing short-term fluctuations.
 
 ---
 
-## Module Justification
+## Core Modules
 
 ### `RL_brain.py` — PPO Agent
 
@@ -101,23 +126,22 @@ It defines the policy network, value network, and the entire optimisation pipeli
 - On-Policy Experience Buffer
     - `put_data()` collects (`state, action, reward, prob`) tuples.
     - `make_batch()` constructs mini-batches for PPO updates.
-    - Buffer is cleared each episode to maintain correct on-policy learning.
+    - Buffer is cleared after each PPO update to maintain on-policy learning.
 
 ### `stock_env.py` — Trading Environment
 
 This module implements a **time-series trading environment** driven by sliding-window technical features.
-It serves as the interface between the agent and the market simulation logic.
+It serves as the interface between the agent and the historical market execution and portfolio-accounting logic.
 
 - State Representation:
-    - Each state consists of a `24-step sliding window` of price, volume, and technical indicators (EMA, MACD, RSI, KDJ, CCI, ADX, volatility measures).
-    - Includes a position flag to encode the current exposure.
-    - Provides a structured sequence input for the LSTM policy.
+    - Each state combines a `24-step rolling window` of OHLCV data, technical indicators, and externally generated sentiment features, together with a position flag.
+    - The rolling-window features are flattened into the model state and processed by an LSTM-enhanced actor–critic network.
 - Action Space:
     - 3 discrete actions: `Buy`, `Sell`, `Hold`.
-    - Updates portfolio position based on selected action.
-- Risk-Adjusted Reward:
-    - Reward reflects realised PnL, transaction costs, and a volatility penalty.
-    - Encourages `stable, risk-aware behaviour` rather than aggressive position-taking.
+    - Execution depends on the agent's current holding state.
+- Reward Design:
+    - Uses next-period price changes as the base reward signal, with action- and position-dependent adjustments for Buy, Sell, and Hold decisions.
+    - Transaction costs are incorporated separately through the portfolio execution logic.
 - Backtesting Visualisation:
     `draw()` plots: `price series`, `positions`, `cumulative PnL`, `agent decisions`
 
@@ -132,9 +156,9 @@ Core functions:
 - PPO Training Loop:
     - Interacts with the environment to collect on-policy trajectories.
     - Calls `put_data()` to store `(state, action, reward, prob)` tuples.
-    - Performs PPO updates every episode using freshly collected data.
+    - Performs PPO updates after an initial warm-up period using collected on-policy trajectories.
 - Backtesting & Evaluation
-    - Periodically evaluates the policy on held-out test data.
+    - Evaluates the current policy on the held-out test split during training.
     - Uses `BackTest()` with a greedy policy (`argmax(prob)`).
     - Generates plots for: `PnL curves`, `action sequences`, `reward trends`
 
@@ -170,4 +194,4 @@ Below are representative visualisations from the training and evaluation pipelin
 - pandas
 - matplotlib
 - scikit-learn
-- The implementation supports both CPU and GPU acceleration and was trained on a personal NVIDIA GPU (Asus laptop) using PyTorch.
+- The implementation supports both CPU and GPU acceleration and was trained on a personal NVIDIA GPU using PyTorch.

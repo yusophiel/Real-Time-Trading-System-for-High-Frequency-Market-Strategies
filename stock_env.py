@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Feb  4 15:16:28 2020
-
-@author: hcb
-"""
 import itertools
 import numpy as np
 import pandas as pd
